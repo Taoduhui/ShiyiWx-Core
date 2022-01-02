@@ -1,0 +1,16 @@
+page {
+    --Boy: #2592ff
+}
+
+.ThemeFg.Boy {
+    color: var(--Boy)!important;
+}
+
+.ThemeBg.Boy {
+    color: white!important;
+    background-color: var(--Boy)!important;
+}
+
+.ThemeBorder.Boy {
+    border-color: var(--Boy)!important;
+}

@@ -1,0 +1,16 @@
+page {
+    --Girl: #ff7b7b
+}
+
+.ThemeFg.Girl {
+    color: var(--Girl)!important;
+}
+
+.ThemeBg.Girl {
+    color: white!important;
+    background-color: var(--Girl)!important;
+}
+
+.ThemeBorder.Girl {
+    border-color: var(--Girl)!important;
+}
