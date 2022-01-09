@@ -9,7 +9,7 @@ export interface PageMapItem {
 }
 
 interface WaitForBackTask{
-    task:Task,
+    task:Task<any>,
     pageInstance:ShiyiPageBase|undefined
 }
 
@@ -42,8 +42,6 @@ export class Router {
     private static RegisteredDataObservers: Map<ShiyiPageBase, Array<(page: ShiyiPageBase) => void>>
         = new Map<ShiyiPageBase, Array<(page: ShiyiPageBase) => void>>();
     
-
-    
     private static WaitForBackTaskStacks:Array<WaitForBackTask>=new Array<WaitForBackTask>();
 
     public static PageLoad(page: ShiyiPageBase): void {
@@ -53,6 +51,7 @@ export class Router {
         Router.PageStacks.push(page);
     }
 
+    public static NavigatebackParam:Record<string,any>={};
     public static PageUnload(): void {
         let Observers = Router.RegisteredDataObservers.get(Router.CurrentPage);
         if (Observers) {
@@ -63,10 +62,11 @@ export class Router {
         let page = Router.PageStacks.pop();
         if(page){
             if(Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].pageInstance==page){
-                Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].task.Continue();
+                Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].task.Continue(Router.NavigatebackParam);
                 Router.WaitForBackTaskStacks.pop();
             }
         }
+        Router.NavigatebackParam={};
     }
 
     /**
@@ -84,7 +84,7 @@ export class Router {
     }
 
     public static NavigateParam: any
-    public static NavigateTo(name: PageName, param?: any): Task<void> {
+    public static NavigateTo(name: PageName, param?: any): Task<any> {
         Router.NavigateParam = param ? param : undefined;
         
         wx.navigateTo({
@@ -98,7 +98,8 @@ export class Router {
         return task;
     }
 
-    public static NavigateBack() {
+    public static NavigateBack(Param?:any) {
+        Router.NavigatebackParam=Param;
         wx.navigateBack();
     }
 

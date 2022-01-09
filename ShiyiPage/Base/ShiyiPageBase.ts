@@ -210,6 +210,10 @@ export abstract class ShiyiPageBase
             name: TargetKey as string,
             PreProcess: PreProcess
         })
+        let RenderData:Record<string,any> = {};
+        //@ts-ignore
+        RenderData[SrcKey as string] = this.data[SrcKey]
+        this.Render<any>(RenderData)
     }
 
     /**
