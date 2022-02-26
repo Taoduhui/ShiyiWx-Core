@@ -1,9 +1,10 @@
-﻿import { Task } from "../../Utils/Utils";
+﻿import { Debug } from "../../Utils/Utils";
 import Utils = require("../../Utils/Utils");
 import { RequestModelBase } from "./RequestModelBase";
 import {  ResponseDataModelBase, ResponseExceptionHandler, ResponseModelBase } from "./ResponseModelBase";
 import { CustomRequestMiddleware, CustomRespDataModel, CustomResponseMiddleware, Host } from "@Root/ShiyiFramework/Config/ApiConfig/Api.Config";
 import { RequestMiddleware, ResponseMiddleware, ResponseType } from "./Middleware";
+import { Task } from "../../Task/Task";
 
 export interface RequsetBody{
     method: "OPTIONS" | "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "TRACE" | "CONNECT" ,
@@ -19,7 +20,7 @@ export interface RequsetBody{
  * 视情况可选是否传入外部的结束事件给子类*/
 export abstract class ApiBase<ResultT = any> extends Task<ResultT> {
     public Host: string = Host;
-    public Url: string = "";
+    public Url: string = "";//完整Url
     public ReqModel: RequestModelBase;
     public RespModel: ResponseModelBase;
     public RequestMiddlewareGroup:Array<RequestMiddleware>=[];
@@ -45,14 +46,7 @@ export abstract class ApiBase<ResultT = any> extends Task<ResultT> {
                 header: this.ReqModel.GetHeader(),
             }
 
-            for(let i=0;i<CustomRequestMiddleware.length;i++){
-                let res = CustomRequestMiddleware[i].Process(Body);
-                if(res){
-                    Body = res;
-                }else{
-                    return;
-                }
-            }
+            //#region "个体Api中间件"
             for(let i=0;i<this.RequestMiddlewareGroup.length;i++){
                 let res = this.RequestMiddlewareGroup[i].Process(Body);
                 if(res){
@@ -61,6 +55,18 @@ export abstract class ApiBase<ResultT = any> extends Task<ResultT> {
                     return;
                 }
             }
+            //#endregion
+
+            //#region "全局中间件"
+            for(let i=0;i<CustomRequestMiddleware.length;i++){
+                let res = CustomRequestMiddleware[i].Process(Body);
+                if(res){
+                    Body = res;
+                }else{
+                    return;
+                }
+            }
+            //#endregion
 
             wx.request({
                 method: Body.method,
@@ -69,14 +75,14 @@ export abstract class ApiBase<ResultT = any> extends Task<ResultT> {
                 header: Body.header,
                 success: res => {
                     let CustomData:CustomRespDataModel;
-                    for(let i=0;i<CustomResponseMiddleware.length;i++){
-                        let CustomData = CustomResponseMiddleware[i].Process(res as ResponseType);
+                    for(let i=0;i<this.ResponseMiddlewareGroup.length;i++){
+                        let CustomData = this.ResponseMiddlewareGroup[i].Process(res as ResponseType);
                         if(CustomData==null){
                             return;
                         }
                     }
-                    for(let i=0;i<this.ResponseMiddlewareGroup.length;i++){
-                        let CustomData = this.ResponseMiddlewareGroup[i].Process(res as ResponseType);
+                    for(let i=0;i<CustomResponseMiddleware.length;i++){
+                        let CustomData = CustomResponseMiddleware[i].Process(res as ResponseType);
                         if(CustomData==null){
                             return;
                         }
@@ -93,7 +99,7 @@ export abstract class ApiBase<ResultT = any> extends Task<ResultT> {
                         icon:'error',
                         duration:2000
                     })
-                    console.log({
+                    Debug(3)({
                         Url: this.Url,
                         Msg: res
                     });

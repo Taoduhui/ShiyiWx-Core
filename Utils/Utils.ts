@@ -1,4 +1,5 @@
 import { StorageKey } from "../Config/StorageConfig/Storage.Config";
+import { DebugLevel } from "../Config/UtilsConfig/Utils.Config";
 
 export class KeyValuePair<T_K, T_V>{
     public Key: T_K;
@@ -6,6 +7,47 @@ export class KeyValuePair<T_K, T_V>{
     constructor(_key: T_K, _value: T_V) {
         this.Key = _key;
         this.Value = _value;
+    }
+}
+
+
+// var consolelog:any;
+
+export function Debug(level:number):(...arg:any)=>any{
+    //@ts-ignore
+    if (DebugLevel == 0) {
+        return (..._:any)=>{};
+    } else if (level <= DebugLevel) {
+        return console.log;
+    }
+    return (..._:any)=>{};
+}
+
+// export function EnableShiyiDebug() {
+//     consolelog = console.log;
+//     console.log = (...arg:any)=>{
+        
+//     };
+
+//     // console.log = (function (oriLogFunc) {
+//     //     return function () {
+//     //         //if (!Config.isProduct) {
+//     //             try {
+//     //                 oriLogFunc.call(console, ...arguments);
+//     //             } catch (e) {
+//     //                 console.error('console.log error', e);
+//     //             }
+//     //         //}
+//     //     }
+//     // })(console.log);
+//     // console.log("test console.log");
+// }
+
+export function ShiyiDebug(level: number, ...args: any) {
+    if (level == 0) {
+        return;
+    } else if (level <= DebugLevel) {
+        Debug(3)( args)
     }
 }
 
@@ -43,21 +85,6 @@ export class Guid {
 
     public toJSON(): string {
         return this.value;
-    }
-}
-
-export class List {
-    public static Insert<T>(src: Array<T>, item: T, index: number) {
-        src.splice(index, 0, item);
-        return src;
-    }
-    public static Remove<T>(src: Array<T>, index: number) {
-        src.splice(index, 1);
-        return src;
-    }
-    public static Add<T>(src: Array<T>, item: T) {
-        src.push(item);
-        return src;
     }
 }
 
@@ -102,113 +129,6 @@ export function SaveCookies(NewCookies: string[]) {
     }
 }
 
-export class TaskGroup {
-    public TaskArray: Array<Task<any>> = new Array<Task<any>>();
-    private CompleteCounter = 0;
-    public Add(task: Task<any>) {
-        this.TaskArray.push(task);
-    }
-
-    public Run(): Task<Array<Task<any>>> {
-        let task = new Task<Array<Task<any>>>(() => {
-            this.TaskArray.forEach((value) => {
-                value.ContinueWith(() => {
-                    this.CompleteCounter++;
-                    if (this.CompleteCounter == this.TaskArray.length - 1) {
-                        task.Continue(this.TaskArray);
-                    }
-                }).Run();
-            })
-        });
-        return task;
-    }
-}
-
-
-export function printCallStack() {
-    var i = 0;
-    var fun = arguments.callee;
-    do {
-        fun = fun.arguments.callee.caller;
-        console.log(++i + ': ' + fun);
-    } while (fun);
-}
-
-
-export class Task<ResultT = void>{
-    protected ContinueAction?: (result: ResultT, task: Task<any>) => any;
-    public Result!: ResultT;
-    public IsCallbackTask: boolean = false;
-    protected Root: Task<any>;
-    protected Action?: (task: Task<ResultT>) => ResultT | void;
-    protected NextTask!: Task<any>;
-
-    constructor(action?: (task: Task<ResultT>) => ResultT | void, _IsCallbackTask?: boolean) {
-        this.Action = action;
-        this.IsCallbackTask = _IsCallbackTask ? _IsCallbackTask : false;
-        this.Root = this;
-    }
-
-    public Run: () => Task<ResultT> = () => {
-        if (this.Action) {
-            let ActionResult = this.Action(this);
-            if (ActionResult) {
-                this.Result = ActionResult;
-            }
-        }
-        if (!this.IsCallbackTask) {
-            this._continue();
-        }
-        return this;
-    }
-
-    public static Run<ResultT>(action: (task: Task<ResultT>) => ResultT): Task<ResultT> {
-        let task: Task<ResultT> = new Task<ResultT>(action);
-        return task.Run();
-    }
-
-    public _continue(result?: ResultT): Task<ResultT> {
-        if (result) {
-            this.Result = result;
-        }
-        if (this.ContinueAction) {
-            let ContinueResult = this.ContinueAction(this.Result, this.NextTask);
-            this.NextTask.Result = ContinueResult;
-            if (!this.NextTask.IsCallbackTask) {
-                this.NextTask._continue();
-            }
-        }
-        return this;
-    }
-
-    public Continue(result?: ResultT): Task<ResultT> {
-        // if (!this.NextTask.IsCallbackTask) {
-        //     console.warn(this.ContinueAction, "You call Continue,but has not set _IsCallbackTask as true");
-        // }
-        this.IsCallbackTask=true;
-        return this._continue(result);
-    }
-
-    public ContinueWith<ContinueResult = void>(
-        Action: (result: ResultT, task: Task<ContinueResult>) => ContinueResult | void,
-        _IsCallbackTask?: boolean)
-        : Task<ContinueResult> {
-        this.ContinueAction = Action;
-        this.NextTask = new Task<ContinueResult>();
-        this.NextTask.Root = this.Root;
-        this.NextTask.IsCallbackTask = _IsCallbackTask ? _IsCallbackTask : false;
-        this.NextTask.Run = this.Root.Run.bind(this.Root);
-        return this.NextTask;
-    }
-
-    public static PrintFlow(task: Task<any>) {
-        let root = task.Root;
-        let currentTask = root;
-        while (currentTask) {
-            currentTask = currentTask.NextTask;
-        }
-    }
-}
 
 export class AsyncGroup {
     private AsyncFuncMap: Map<string, (callback: (result: any) => void) => any>

@@ -11,6 +11,16 @@ page {
     background-color: var(--Boy)!important;
 }
 
+.ThemeBg.Fade.Boy {
+    color: white!important;
+    background-color: #66b3ff!important;
+}
+
 .ThemeBorder.Boy {
     border-color: var(--Boy)!important;
+}
+
+.SpAvatar.Boy{
+    background-size:100% 100%; 
+    background-image: url('https://sport-1307858753.cos.ap-beijing.myqcloud.com/undraw_male_avatar_323b.svg');
 }

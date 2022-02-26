@@ -1,6 +1,8 @@
 import { PageName, DirectoryName, PageMap } from "../Config/RouterConfig/Router.Config";
 import { ShiyiPageBase } from "../ShiyiPage/Base/ShiyiPageBase";
-import { Task } from "../Utils/Utils";
+import { Task } from "../Task/Task";
+import { Debug } from "../Utils/Utils";
+
 
 export interface PageMapItem {
     name: PageName|DirectoryName,
@@ -49,6 +51,7 @@ export class Router {
             Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].pageInstance=page;
         }
         Router.PageStacks.push(page);
+        Debug(5)("PageLoaded",page)
     }
 
     public static NavigatebackParam:Record<string,any>={};
@@ -60,6 +63,7 @@ export class Router {
             }
         }
         let page = Router.PageStacks.pop();
+        Debug(5)("PageUnload",page)
         if(page){
             if(Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].pageInstance==page){
                 Router.WaitForBackTaskStacks[Router.WaitForBackTaskStacks.length-1].task.Continue(Router.NavigatebackParam);
