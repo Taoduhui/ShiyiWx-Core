@@ -1,2 +1,2 @@
 # ShiyiWx-Core
-文档 https://blog.shiyi-compus.com/2021/12/23/ShiyiFramework/Intro/
+文档 https://taoduhui.github.io/ShiyiWx-Core/document/intro
