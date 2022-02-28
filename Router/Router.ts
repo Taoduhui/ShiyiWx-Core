@@ -90,7 +90,6 @@ export class Router {
     public static NavigateParam: any
     public static NavigateTo(name: PageName, param?: any): Task<any> {
         Router.NavigateParam = param ? param : undefined;
-        
         wx.navigateTo({
             url: Router.GetPagePath(name)
         });
